@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 나만의 식물 키우기</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #f0f7e6;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .game-container {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(60,120,40,0.12);
+  }
+  .header { text-align: center; margin-bottom: 1rem; }
+  .title { font-size: 24px; font-weight: 800; color: #2c4a1e; }
+  .subtitle { font-size: 14px; color: #6b8c57; margin-top: 2px; }
+  .scene {
+    background: linear-gradient(180deg, #b8e4f9 0%, #d4f1c0 60%, #8fca5a 100%);
+    border-radius: 16px;
+    height: 230px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 1px solid #c8e6a0;
+  }
+  .sun {
+    position: absolute;
+    top: 16px; right: 20px;
+    width: 48px; height: 48px;
+    background: #FFD600;
+    border-radius: 50%;
+    box-shadow: 0 0 0 10px rgba(255,214,0,0.18);
+    transition: all 0.5s;
+  }
+  .cloud {
+    position: absolute;
+    top: 24px; left: 28px;
+    background: white;
+    border-radius: 20px;
+    width: 64px; height: 24px;
+    opacity: 0.88;
+  }
+  .cloud::after {
+    content:'';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    top: -15px; left: 12px;
+  }
+  .ground-top {
+    position: absolute;
+    bottom: 52px; left: 0; right: 0;
+    height: 10px;
+    background: #8fca5a;
+  }
+  .ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: #6b3e26;
+    border-radius: 0 0 16px 16px;
+  }
+  .plant-wrapper {
+    position: absolute;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.6s ease;
+  }
+  .plant-emoji {
+    font-size: 68px;
+    line-height: 1;
+    transition: transform 0.4s;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .stat-card {
+    background: #f7faf2;
+    border-radius: 12px;
+    padding: 10px 12px;
+    border: 1px solid #e0ecd4;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #6b8c57;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .stat-bar-bg {
+    background: #e5eede;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .stat-bar { height: 8px; border-radius: 4px; transition: width 0.4s ease; }
+  .bar-water { background: #378ADD; }
+  .bar-sun   { background: #EF9F27; }
+  .bar-fert  { background: #639922; }
+  .stat-val {
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 4px;
+    color: #2c4a1e;
+  }
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .action-btn {
+    background: white;
+    border: 1px solid #d4e8bb;
+    border-radius: 12px;
+    padding: 14px 8px 10px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c4a1e;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-btn:hover { background: #f2f9e8; transform: translateY(-2px); border-color: #aad67a; }
+  .action-btn:active { transform: scale(0.96); }
+  .action-btn.disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .action-icon { font-size: 30px; }
+  .action-cost { font-size: 11px; color: #8aab6a; font-weight: 600; }
+  .bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f7faf2;
+    border-radius: 12px;
+    padding: 10px 16px;
+    border: 1px solid #e0ecd4;
+  }
+  .coins {
+    font-size: 16px;
+    font-weight: 800;
+    color: #2c4a1e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stage-badge {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 16px;
+    border-radius: 20px;
+  }
+  .stage-0 { background: #e8e6de; color: #5a5850; }
+  .stage-1 { background: #C0DD97; color: #3B6D11; }
+  .stage-2 { background: #9FE1CB; color: #0F6E56; }
+  .stage-3 { background: #FAC775; color: #854F0B; }
+  .stage-4 { background: #F5C4B3; color: #993C1D; }
+  .stage-5 { background: #B5D4F4; color: #185FA5; }
+  .log {
+    font-size: 13px;
+    color: #6b8c57;
+    margin-top: 10px;
+    text-align: center;
+    min-height: 20px;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .harvest-btn {
+    background: #639922;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .harvest-btn:hover { background: #3B6D11; }
+  .water-drop {
+    position: absolute;
+    pointer-events: none;
+    font-size: 22px;
+    animation: dropfall 0.85s ease forwards;
+  }
+  .sparkle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 20px;
+    animation: sparklefly 0.9s ease forwards;
+  }
+  @keyframes dropfall {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(65px); }
+  }
+  @keyframes sparklefly {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-55px) scale(0.4); }
+  }
+  .grow-anim { animation: growPop 0.4s ease; }
+  @keyframes growPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="header">
+    <div class="title">🌱 나만의 식물 키우기</div>
+    <div class="subtitle">물, 햇빛, 비료로 식물을 키워보세요!</div>
+  </div>
+  <div class="scene" id="scene">
+    <div class="sun" id="sun"></div>
+    <div class="cloud"></div>
+    <div class="ground-top"></div>
+    <div class="ground"></div>
+    <div class="plant-wrapper" id="plant-wrapper">
+      <div class="plant-emoji" id="plant-emoji">🌱</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">💧 수분</div>
+      <div class="stat-bar-bg"><div class="stat-bar bar-water" id="bar-water" style="width:40%"></div></div>
+      <div class="stat-val" id="val-water">40%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">☀️ 햇빛</div>
+      <div class="stat-bar-bg"><div class="stat-bar bar-sun" id="bar-sun" style="width:50%"></div></div>
+      <div class="stat-val" id="val-sun">50%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🌿 영양</div>
+      <div class="stat-bar-bg"><div class="stat-bar bar-fert" id="bar-fert" style="width:20%"></div></div>
+      <div class="stat-val" id="val-fert">20%</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="action-btn" id="btn-water" onclick="doAction('water')">
+      <span class="action-icon">💧</span>
+      <span>물 주기</span>
+      <span class="action-cost">무료</span>
+    </button>
+    <button class="action-btn" id="btn-sun" onclick="doAction('sun')">
+      <span class="action-icon">☀️</span>
+      <span>햇빛 쬐기</span>
+      <span class="action-cost">무료</span>
+    </button>
+    <button class="action-btn" id="btn-fert" onclick="doAction('fert')">
+      <span class="action-icon">🌿</span>
+      <span>비료 주기</span>
+      <span class="action-cost">🪙 5</span>
+    </button>
+  </div>
+  <div class="bottom-row">
+    <div class="coins">🪙 <span id="coin-val">10</span></div>
+    <div class="stage-badge stage-0" id="stage-badge">씨앗</div>
+    <button class="harvest-btn" id="harvest-btn" style="display:none" onclick="harvest()">수확하기 🌾</button>
+  </div>
+  <div class="log" id="log">씨앗에 물을 주고 키워보세요!</div>
+</div>
+
+<script>
+const stages = [
+  { name: '씨앗',      emoji: '🌱', threshold: 0,   cls: 'stage-0' },
+  { name: '새싹',      emoji: '🪴', threshold: 60,  cls: 'stage-1' },
+  { name: '어린 식물', emoji: '🌿', threshold: 150, cls: 'stage-2' },
+  { name: '꽃봉오리',  emoji: '🌸', threshold: 280, cls: 'stage-3' },
+  { name: '활짝 꽃',   emoji: '🌺', threshold: 450, cls: 'stage-4' },
+  { name: '열매 맺음', emoji: '🍎', threshold: 650, cls: 'stage-5' },
+];
+
+const msgs = {
+  water: ['💧 시원하게 물을 줬어요!', '💦 촉촉해졌어요!', '🌊 물을 흠뻑 마셨어요!'],
+  sun:   ['☀️ 햇빛을 쬐었어요!', '🌤️ 광합성 중!', '✨ 에너지 충전!'],
+  fert:  ['🌿 비료를 뿌렸어요!', '🪱 영양분이 쑥쑥!', '💪 더 튼튼해질 거예요!'],
+};
+
+let state = { water: 40, sun: 50, fert: 20, coins: 10, growth: 0, stage: 0, cooldowns: {} };
+let decayTimer;
+
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function doAction(type) {
+  const now = Date.now();
+  if ((state.cooldowns[type] || 0) > now - 1200) return;
+  state.cooldowns[type] = now;
+
+  if (type === 'fert' && state.coins < 5) { showLog('🪙 코인이 부족해요!'); return; }
+  if (type === 'fert') state.coins -= 5;
+
+  const gains = { water: [20, 35], sun: [15, 25], fert: [25, 40] };
+  const [lo, hi] = gains[type];
+  const gain = lo + Math.floor(Math.random() * (hi - lo + 1));
+  const key = type === 'fert' ? 'fert' : type;
+  state[key] = clamp(state[key] + gain, 0, 100);
+
+  const growGain = type === 'fert' ? gain * 1.4 : type === 'water' ? gain * 0.9 : gain * 0.8;
+  state.growth += Math.round(growGain);
+
+  showLog(msgs[type][Math.floor(Math.random() * msgs[type].length)]);
+  spawnEffect(type);
+  tick();
+  resetDecay();
+}
+
+function harvest() {
+  const reward = 20 + Math.floor(Math.random() * 15);
+  state.coins += reward;
+  state.growth = 0; state.stage = 0;
+  state.water = 30; state.sun = 40; state.fert = 10;
+  document.getElementById('plant-emoji').textContent = stages[0].emoji;
+  const badge = document.getElementById('stage-badge');
+  badge.textContent = stages[0].name;
+  badge.className = 'stage-badge stage-0';
+  document.getElementById('harvest-btn').style.display = 'none';
+  showLog(`🌾 수확 완료! 🪙 +${reward} 코인 획득!`);
+  tick();
+}
+
+function tick() {
+  document.getElementById('bar-water').style.width = state.water + '%';
+  document.getElementById('bar-sun').style.width   = state.sun + '%';
+  document.getElementById('bar-fert').style.width  = state.fert + '%';
+  document.getElementById('val-water').textContent = Math.round(state.water) + '%';
+  document.getElementById('val-sun').textContent   = Math.round(state.sun) + '%';
+  document.getElementById('val-fert').textContent  = Math.round(state.fert) + '%';
+  document.getElementById('coin-val').textContent  = state.coins;
+
+  let newStage = 0;
+  for (let i = stages.length - 1; i >= 0; i--) {
+    if (state.growth >= stages[i].threshold) { newStage = i; break; }
+  }
+  if (newStage !== state.stage) {
+    state.stage = newStage;
+    const el = document.getElementById('plant-emoji');
+    el.textContent = stages[newStage].emoji;
+    el.classList.remove('grow-anim');
+    void el.offsetWidth;
+    el.classList.add('grow-anim');
+    const badge = document.getElementById('stage-badge');
+    badge.textContent = stages[newStage].name;
+    badge.className = 'stage-badge ' + stages[newStage].cls;
+    if (newStage === stages.length - 1) {
+      document.getElementById('harvest-btn').style.display = 'inline-block';
+      showLog('🎉 수확할 수 있어요!');
+    }
+  }
+
+  const sun = document.getElementById('sun');
+  sun.style.opacity = 0.4 + (state.sun / 100) * 0.6;
+  sun.style.transform = `scale(${(0.7 + (state.sun / 100) * 0.6).toFixed(2)})`;
+}
+
+function resetDecay() {
+  clearTimeout(decayTimer);
+  decayLoop();
+}
+
+function decayLoop() {
+  decayTimer = setTimeout(() => {
+    state.water = clamp(state.water - 3, 0, 100);
+    state.sun   = clamp(state.sun - 2, 0, 100);
+    state.fert  = clamp(state.fert - 1, 0, 100);
+    if (state.water < 20) showLog('🥵 물이 부족해요!');
+    else if (state.sun < 15) showLog('😟 햇빛이 필요해요!');
+    tick();
+    decayLoop();
+  }, 4000);
+}
+
+function showLog(msg) {
+  const el = document.getElementById('log');
+  el.style.opacity = 0;
+  setTimeout(() => { el.textContent = msg; el.style.opacity = 1; }, 120);
+}
+
+function spawnEffect(type) {
+  const scene = document.getElementById('scene');
+  const el = document.createElement('div');
+  el.className = type === 'water' ? 'water-drop' : 'sparkle';
+  el.textContent = type === 'water' ? '💧' : type === 'sun' ? '✨' : '🌿';
+  el.style.left = (30 + Math.random() * 40) + '%';
+  el.style.top  = (25 + Math.random() * 30) + '%';
+  scene.appendChild(el);
+  setTimeout(() => el.remove(), 920);
+}
+
+tick();
+decayLoop();
+</script>
+</body>
+</html>
